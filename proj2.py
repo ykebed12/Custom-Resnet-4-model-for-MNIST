@@ -182,6 +182,8 @@ def training_loop (train_dataset, val_dataset, model, num_epochs = 150):
     
   return (train_acc_results, val_acc_results, train_loss_results, val_loss_results)
 
+dot_img_file = './model_graph.png'
+tf.keras.utils.plot_model(model, to_file=dot_img_file, show_shapes=True)
 train_acc_results, val_acc_results, train_loss_results, val_loss_results = training_loop (train_dataset, val_dataset, model, num_epochs=150)
 
 
