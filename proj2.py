@@ -6,13 +6,16 @@ from tensorflow.keras import layers
 from tensorflow.keras import models
 from tensorflow.keras import optimizers
 from tensorflow.keras import activations
+from tensorflow.keras.regularizers import l1_l2
+from tensorflow.keras.layers.experimental.preprocessing import RandomFlip, RandomRotation
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import cv2
 import os
 
-
+# Set a global random seed for TensorFlow
+tf.random.set_seed(42)
 np.set_printoptions(suppress=True)   # suppress scientific notation
 
 # Create Folder if it doesnt exist
@@ -65,7 +68,7 @@ my_x_train, my_x_valid, my_x_test = my_x_train / 255.0, my_x_valid / 255.0, my_x
 
 #####################################
 ## DATA PREPARATION
-batch_size = 100
+batch_size = 50
 # Prepare the training dataset.
 train_dataset = tf.data.Dataset.from_tensor_slices((my_x_train, my_y_train))
 train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
@@ -83,24 +86,20 @@ def myModel():
 
     # FIRST SECTION
     inputs = keras.Input(shape=(28, 28, 1), name="Input_1")
-    x = layers.Conv2D(5, (3, 3), padding="same", activation='relu', name="conv_11")(inputs)
-    x = layers.Conv2D(5, (3, 3), padding="same", activation='relu', name="conv_12")(x)
+    data_augmentation = tf.keras.Sequential([
+        RandomRotation(0.1)  # Randomly rotate images by up to 20 degrees
+    ])
+    x = data_augmentation(inputs)
+    x = layers.Conv2D(5, (3, 3), padding="same", activation='relu', name="conv_11", kernel_regularizer=l1_l2(l1=0.01, l2=0.01))(inputs)
+    x = layers.Conv2D(5, (3, 3), padding="same", activation='relu', name="conv_12", kernel_regularizer=l1_l2(l1=0.01, l2=0.01))(x)
     add_1 = layers.Add()([x, inputs])
 
-    # # Second Section
+    # # # Second Section
     maxPool1 = layers.MaxPooling2D(pool_size=(2,2), strides=2)(add_1)
-    x = layers.Conv2D(5, (3,3), padding="same", activation='relu')(maxPool1)
-    x = layers.Conv2D(5, (3,3), padding="same", activation='relu')(x)
+    x = layers.Conv2D(5, (3,3), padding="same", activation='relu', kernel_regularizer=l1_l2(l1=0.02, l2=0.02))(maxPool1)
     add_2 = layers.Add()([x, maxPool1])
-    
 
-    # # Third
-    max_pool_31 = layers.MaxPooling2D(pool_size=(2,2), strides=2)(add_2)
-    x = layers.Conv2D(5, (3,3), padding="same", activation='relu')(max_pool_31)
-    x = layers.Conv2D(5, (3,3), padding="same", activation='relu')(x)
-    add_3 = layers.Add()([x, max_pool_31])
-
-    flat = layers.Flatten()(add_3)
+    flat = layers.Flatten()(add_2)
     dense = layers.Dense(10, activation="softmax")(flat)
     model = keras.Model(inputs=inputs, outputs=dense, name="My_Model")
     return model
@@ -171,11 +170,13 @@ def training_loop (train_dataset, val_dataset, model, num_epochs = 150):
         # Update val metrics
         val_acc_metric.update_state(y_batch_val, val_logits)
         val_batch_loss.append(loss_fn(y_batch_val, val_logits))
-
-    val_loss_results.append(sum(val_batch_loss) / len(val_batch_loss))
+    avg_val_loss = sum(val_batch_loss) / len(val_batch_loss)
+    val_loss_results.append(avg_val_loss)
     val_acc = val_acc_metric.result()
     val_acc_metric.reset_states()
     print("Validation acc: %.4f" % (float(val_acc),))
+    print("Train loss: %.4f" % (float(sum(epoch_loss) / len(epoch_loss)),))
+    print("Validation loss: %.4f" % (float(avg_val_loss),))
 
     val_acc_results.append(float(val_acc))
   
