@@ -3,7 +3,7 @@
 ## Overview
 This repository contains the implementation of a Resnet-4 model designed specifically for the MNIST number dataset. Residual Networks (ResNet) are a type of deep neural network architecture introduced by Kaiming He et al. in 2015. The primary innovation in ResNet is the introduction of "skip connections" or "shortcuts" that allow the network to skip layers during forward and backward passes. This helps in preventing the vanishing gradient problem, making it feasible to train very deep networks.
 
-The number in the ResNet name (e.g., ResNet-4, ResNet-30) indicates the total number of weighted layers in the network. In this context **ResNet-4** contains 4 weighted layers, including 3 convolutional layers and 1 dense layer. It's a simplified version, making it faster and suitable for datasets like MNIST which might not require very deep architectures.
+The number in the ResNet name (e.g., ResNet-4, ResNet-30) indicates the total number of layers in the network. In this context **ResNet-4** contains 4 layers, including 3 convolutional layers and 1 max-pool layer. It's a simplified version, making it faster and suitable for datasets like MNIST which might not require very deep architectures.
 
 For the MNIST number dataset, our Resnet-4 model leverages the power of residual networks to achieve high accuracy on the task of handwritten digit recognition, while ensuring efficient training and inference times.
 
